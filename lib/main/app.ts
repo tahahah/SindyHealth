@@ -23,7 +23,7 @@ export function createAppWindow(): BrowserWindow {
     focusable: false,
     icon: appIcon,
     titleBarStyle: 'hiddenInset',
-    title: 'Clonely',
+    title: 'SindyHealth',
     resizable: false,
     backgroundMaterial: 'auto',
   })
