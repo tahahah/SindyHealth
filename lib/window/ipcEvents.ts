@@ -48,4 +48,12 @@ export const registerWindowIPC = (mainWindow: BrowserWindow) => {
   handleIPC('web-zoom-out', () => webContents.setZoomLevel(webContents.zoomLevel - 0.5))
   handleIPC('web-toggle-fullscreen', () => mainWindow.setFullScreen(!mainWindow.fullScreen))
   handleIPC('web-open-url', (_e, url) => shell.openExternal(url))
+
+  ipcMain.on('live-audio-chunk', (_e, chunk) => {
+    console.log('live-audio-chunk', chunk)
+  })
+
+  ipcMain.on('live-image-chunk', (_e, chunk) => {
+    console.log('live-image-chunk', chunk)
+  })
 }

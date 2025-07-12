@@ -20,7 +20,7 @@ export function createAppWindow(): BrowserWindow {
     alwaysOnTop: true,
     transparent: true,
     hasShadow: false,
-    focusable: false,
+    focusable: true,
     icon: appIcon,
     titleBarStyle: 'hiddenInset',
     title: 'SindyHealth',

@@ -1,20 +1,53 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { Mic } from "lucide-react";
+import { AudioStreamHandle, startAudioStreaming } from "@/app/lib/liveAudioStream";
+import { FrameStreamHandle, startFrameStreaming } from "@/app/lib/liveFrameStream";
 
 export const Mainbar = ({ toggleMainPane }: { toggleMainPane: () => void }) => {
     const [isRecording, setIsRecording] = useState(false)
     const [recordingTime, setRecordingTime] = useState(0)
-    const handleMicClick = () => {
+
+    
+    // Live audio streaming refs
+    const audioHandleRef = useRef<AudioStreamHandle | null>(null);
+    const frameHandleRef = useRef<FrameStreamHandle | null>(null);
+
+    const handleMicClick = async () => {
         toggleMainPane()
         if (isRecording) {
             setIsRecording(false)
             setRecordingTime(0)
         } else {
+            try {
+                // ======== Start Recording (optimised) ========
+                const { handle: audioHandle, streams } = await startAudioStreaming((chunk) => {
+                  window.api.send('live-audio-chunk', chunk);
+                });
+                audioHandleRef.current = audioHandle;
+        
+                // ---- JPEG frame streaming ----
+                if (streams.systemStream) {
+                    const frameHandle = startFrameStreaming(
+                      streams.systemStream,
+                      (jpeg) => {
+                        window.api.send('live-image-chunk', jpeg);
+                      },
+                      { width: 1280, height: 720, intervalMs: 1000, quality: 1}
+                    );
+                    frameHandleRef.current = frameHandle;
+                    console.log('Frame streaming started');
+                } else {
+                    console.warn('System stream not available, skipping frame streaming.');
+                }
+            } catch (err) {
+                console.error('Failed to start recording:', err);
+            }
             setIsRecording(true)
             setRecordingTime(0)
         }
     }
+    
     const formatTime = (time: number) => {
         const minutes = Math.floor(time / 60)
         const seconds = time % 60

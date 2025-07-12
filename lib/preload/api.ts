@@ -13,6 +13,8 @@ const api = {
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel)
   },
+  enableLoopback: (): Promise<void> => ipcRenderer.invoke('enable-loopback-audio'),
+  disableLoopback: (): Promise<void> => ipcRenderer.invoke('disable-loopback-audio'),
 }
 
 export default api

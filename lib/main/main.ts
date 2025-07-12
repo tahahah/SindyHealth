@@ -1,9 +1,23 @@
-import { app, BrowserWindow } from 'electron'
+import { app } from 'electron'
+import { initMain } from 'electron-audio-loopback';
+
+// allow screen-capture to return system-audio tracks (Chrome flag)
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { createAppWindow } from './app'
 import { ShortcutsHelper } from './shortcutHelper'
 
+// Add global error handlers
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+})
+
 app.disableHardwareAcceleration()
+
+initMain();
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
