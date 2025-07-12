@@ -18,7 +18,7 @@ export function createAppWindow(): BrowserWindow {
     },
     show: true,
     alwaysOnTop: true,
-    transparent: false,
+    transparent: true,
     hasShadow: false,
     focusable: false,
     icon: appIcon,
@@ -26,7 +26,11 @@ export function createAppWindow(): BrowserWindow {
     title: 'SindyHealth',
     resizable: false,
     backgroundMaterial: 'auto',
+    frame: true,
   })
+
+  // Make window click-through
+  // mainWindow.setIgnoreMouseEvents(true)
 
   // Register IPC events for the main window.
   registerWindowIPC(mainWindow)
