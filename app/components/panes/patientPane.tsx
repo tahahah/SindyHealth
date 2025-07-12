@@ -25,32 +25,27 @@ export const PatientPane = () => {
     };
 
     const onQuestionsChunk = (chunk: { text: string, reset: boolean }) => {
-      if (chunk.reset) {
-        setSuggestedQuestions('');
-        setTagBuffer('');
-      }
-
       const newBuffer = tagBuffer + chunk.text;
 
       if (newBuffer.includes('<NONE/>')) {
-        setTagBuffer(''); // Found the tag, clear buffer and ignore.
+        setTagBuffer('');
         return;
       }
 
-      // Check if we are potentially in the middle of a tag
       const tagStartIndex = newBuffer.lastIndexOf('<');
       const tagEndIndex = newBuffer.lastIndexOf('>');
 
-      // If a '<' exists without a corresponding '>', we might be in a partial tag.
       if (tagStartIndex > tagEndIndex) {
-        setTagBuffer(newBuffer); // Buffer and wait
+        setTagBuffer(newBuffer);
         return;
       }
 
-      // If we're here, it's not a <NONE/> tag and not an incomplete tag.
-      // It's safe to update the UI.
-      setSuggestedQuestions(prev => prev + newBuffer);
-      setTagBuffer(''); // Clear the buffer as we've used it.
+      if (chunk.reset) {
+        setSuggestedQuestions(newBuffer);
+      } else {
+        setSuggestedQuestions(prev => prev + newBuffer);
+      }
+      setTagBuffer('');
     };
 
     const cleanup = () => {
