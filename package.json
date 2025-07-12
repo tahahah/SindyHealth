@@ -1,12 +1,12 @@
 {
-  "name": "era",
+  "name": "sindyhealth",
   "version": "11.0.0",
   "description": "A modern Electron application template with React, Vite, TypeScript, Shadcn UI and TailwindCSS",
   "main": "./out/main/main.js",
   "license": "MIT",
   "author": {
-    "name": "Guasam",
-    "url": "https://github.com/guasam"
+    "name": "Taha",
+    "url": "https://github.com/tahahah"
   },
   "scripts": {
     "dev": "electron-vite dev -w",
@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/guasam/electron-react-app"
+    "url": "https://github.com/tahahah/SindyHealth"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
