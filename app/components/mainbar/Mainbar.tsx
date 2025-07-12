@@ -18,8 +18,13 @@ export const Mainbar = ({ toggleMainPane }: { toggleMainPane: () => void }) => {
         if (isRecording) {
             setIsRecording(false)
             setRecordingTime(0)
+            // ======== Send stop signal ========
+            window.api.send('live-audio-stop');
         } else {
             try {
+                // ======== Send start signal ========
+                window.api.send('live-audio-start');
+
                 // ======== Start Recording (optimised) ========
                 const { handle: audioHandle, streams } = await startAudioStreaming((chunk) => {
                   window.api.send('live-audio-chunk', chunk);
@@ -27,19 +32,19 @@ export const Mainbar = ({ toggleMainPane }: { toggleMainPane: () => void }) => {
                 audioHandleRef.current = audioHandle;
         
                 // ---- JPEG frame streaming ----
-                if (streams.systemStream) {
-                    const frameHandle = startFrameStreaming(
-                      streams.systemStream,
-                      (jpeg) => {
-                        window.api.send('live-image-chunk', jpeg);
-                      },
-                      { width: 1280, height: 720, intervalMs: 1000, quality: 1}
-                    );
-                    frameHandleRef.current = frameHandle;
-                    console.log('Frame streaming started');
-                } else {
-                    console.warn('System stream not available, skipping frame streaming.');
-                }
+                // if (streams.systemStream) {
+                //     const frameHandle = startFrameStreaming(
+                //       streams.systemStream,
+                //       (jpeg) => {
+                //         window.api.send('live-image-chunk', jpeg);
+                //       },
+                //       { width: 1280, height: 720, intervalMs: 1000, quality: 1}
+                //     );
+                //     frameHandleRef.current = frameHandle;
+                //     console.log('Frame streaming started');
+                // } else {
+                //     console.warn('System stream not available, skipping frame streaming.');
+                // }
             } catch (err) {
                 console.error('Failed to start recording:', err);
             }
