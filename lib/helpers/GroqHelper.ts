@@ -52,6 +52,11 @@ const DiagnosesSchema = z.object({
   ).default([])
 });
 
+const TreatmentSchema = z.object({
+  recommendation: z.array(z.string()).default([]),
+  tests: z.array(z.string()).default([])
+});
+
 export class GroqHelper {
   private readonly modelName: string;
   public debouncedStreamDiagnoses: (
@@ -71,22 +76,32 @@ export class GroqHelper {
     const userContent = `Diagnosis: ${diagnosis}\n\nTranscript:\n${currentTranscript}`;
     onStreamStart();
 
-    let fullResponse = "";
+    let fullResponseContent = "";
     const stream = await groq.chat.completions.create({
       messages: [
         { role: "system", content: systemContent },
         { role: "user", content: userContent }
       ],
       model: this.modelName,
+      response_format: { type: "json_object" },
       stream: true
     });
 
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || "";
-      fullResponse += content;
+      fullResponseContent += content;
       onChunk(content);
     }
-    return fullResponse.trim();
+    try {
+      // Strip any thinking tags from the response
+      const cleanResponse = fullResponseContent.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+      const jsonData = JSON.parse(cleanResponse);
+      const validated = TreatmentSchema.parse(jsonData);
+      return JSON.stringify(validated);
+    } catch (error) {
+      console.error("Error parsing treatment plan JSON", error);
+      throw error;
+    }
   }
 
   constructor(modelName: string = "qwen/qwen3-32b") {

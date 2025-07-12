@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import MarkdownRenderer from '../MarkdownRenderer';
 import { z } from 'zod';
 
 const DiagnosesSchema = z.object({
@@ -16,14 +17,40 @@ export const PatientPane = () => {
   const [diagnoses, setDiagnoses] = useState<z.infer<typeof DiagnosesSchema>['likely_diagnoses']>([]);
   const [streamedDiagnoses, setStreamedDiagnoses] = useState('');
   const [suggestedQuestions, setSuggestedQuestions] = useState('');
+  const [tagBuffer, setTagBuffer] = useState('');
 
   useEffect(() => {
     const onDiagnosesChunk = (chunk: string) => {
       setStreamedDiagnoses(prev => prev + chunk);
     };
 
-    const onQuestionsChunk = (chunk: { text: string }) => {
-      setSuggestedQuestions(prev => prev + chunk.text);
+    const onQuestionsChunk = (chunk: { text: string, reset: boolean }) => {
+      if (chunk.reset) {
+        setSuggestedQuestions('');
+        setTagBuffer('');
+      }
+
+      const newBuffer = tagBuffer + chunk.text;
+
+      if (newBuffer.includes('<NONE/>')) {
+        setTagBuffer(''); // Found the tag, clear buffer and ignore.
+        return;
+      }
+
+      // Check if we are potentially in the middle of a tag
+      const tagStartIndex = newBuffer.lastIndexOf('<');
+      const tagEndIndex = newBuffer.lastIndexOf('>');
+
+      // If a '<' exists without a corresponding '>', we might be in a partial tag.
+      if (tagStartIndex > tagEndIndex) {
+        setTagBuffer(newBuffer); // Buffer and wait
+        return;
+      }
+
+      // If we're here, it's not a <NONE/> tag and not an incomplete tag.
+      // It's safe to update the UI.
+      setSuggestedQuestions(prev => prev + newBuffer);
+      setTagBuffer(''); // Clear the buffer as we've used it.
     };
 
     const cleanup = () => {
@@ -40,6 +67,7 @@ export const PatientPane = () => {
       setDiagnoses([]);
       setStreamedDiagnoses('');
       setSuggestedQuestions('');
+      setTagBuffer('');
     });
 
     window.api.receive('groq-diagnoses-start', () => {
@@ -47,7 +75,7 @@ export const PatientPane = () => {
     });
 
     return cleanup;
-  }, []);
+  }, [tagBuffer]);
 
   useEffect(() => {
     if (streamedDiagnoses) {
@@ -61,15 +89,15 @@ export const PatientPane = () => {
     }
   }, [streamedDiagnoses]);
   return (
-    <div className="flex-1 glass rounded-2xl flex flex-row h-full">
+    <div className="flex-1 glass rounded-2xl flex flex-row max-h-1/2">
       {/* Left Column - Suggested Questions & Likely Diagnoses */}
       <div className="flex flex-col w-2/3 p-4">
         {/* Suggested Questions Section */}
         <div className="flex-1 flex flex-col min-h-0 pb-4">
-          <h2 className="text-xl font-semibold mb-2 shrink-0">Suggested Questions</h2>
+          <h2 className="text-xl font-semibold mb-2 shrink-0">Smart Suggestions</h2>
           <div className="flex-1 overflow-y-auto space-y-2 text-md">
             {suggestedQuestions ? (
-              <p className="whitespace-pre-wrap">{suggestedQuestions}</p>
+              <MarkdownRenderer content={suggestedQuestions} />
             ) : (
               <p>Suggested questions will appear here...</p>
             )}

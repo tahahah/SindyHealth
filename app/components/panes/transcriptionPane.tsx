@@ -10,34 +10,21 @@ export const TranscriptionPane = () => {
         transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [transcriptLines]);
 
-    const onTranscript = (alternative: { transcript: string; words: { speaker: number; punctuated_word: string }[] }) => {
+    const onTranscript = (alternative: { transcript: string; words: { speaker: number; punctuated_word: string }[], channel: number }) => {
         console.warn('TranscriptPane: Received transcript object:', alternative);
         const plainTranscript = alternative.transcript;
         if (!plainTranscript) return;
 
+        const speakerLabel = alternative.channel === 0 ? 'Clinician' : 'Patient';
+        const newFormattedPart = `${speakerLabel}: ${plainTranscript}`;
+
         setTranscriptLines(prev => {
-          const next = [...prev, plainTranscript];
+          const next = [...prev, newFormattedPart.trim()];
           transcriptLinesRef.current = next;
           return next;
         });
 
-        // Format the new transcript part with speaker info
-        let newFormattedPart = '';
-        if (alternative.words && alternative.words.length > 0) {
-          let lastSpeaker = -1;
-          for (const word of alternative.words) {
-            if (word.speaker !== lastSpeaker) {
-              lastSpeaker = word.speaker;
-              if (newFormattedPart !== '') {
-                newFormattedPart += '\n';
-              }
-              newFormattedPart += `Speaker ${word.speaker}: `;
-            }
-            newFormattedPart += word.punctuated_word + ' ';
-          }
-        } else {
-          newFormattedPart = plainTranscript;
-        }
+
 
         // Append to the full formatted transcript history
         formattedTranscriptRef.current += newFormattedPart.trim() + '\n';
@@ -55,7 +42,7 @@ export const TranscriptionPane = () => {
     }, []);
 
     return (
-        <div className="flex-1 glass rounded-2xl">
+        <div className="flex-1 glass rounded-2xl max-h-1/2">
             <div className="flex items-center justify-center h-full">
             <div className="flex-1 flex flex-col p-4 pb-2 min-h-0">
         <h2 className="text-xl font-semibold mb-2 shrink-0">Live Transcription</h2>
