@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Mic } from "lucide-react";
 import { AudioStreamHandle, startAudioStreaming } from "@/app/lib/liveAudioStream";
@@ -17,7 +17,6 @@ export const Mainbar = ({ toggleMainPane }: { toggleMainPane: () => void }) => {
         toggleMainPane()
         if (isRecording) {
             setIsRecording(false)
-            setRecordingTime(0)
             // ======== Send stop signal ========
             window.api.send('live-audio-stop');
         } else {
@@ -49,9 +48,26 @@ export const Mainbar = ({ toggleMainPane }: { toggleMainPane: () => void }) => {
                 console.error('Failed to start recording:', err);
             }
             setIsRecording(true)
-            setRecordingTime(0)
         }
     }
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isRecording) {
+            setRecordingTime(0);
+            interval = setInterval(() => {
+                setRecordingTime(prevTime => prevTime + 1);
+            }, 1000);
+        } else {
+            setRecordingTime(0);
+        }
+
+        return () => {
+            if (interval) {
+                clearInterval(interval);
+            }
+        };
+    }, [isRecording]);
     
     const formatTime = (time: number) => {
         const minutes = Math.floor(time / 60)
